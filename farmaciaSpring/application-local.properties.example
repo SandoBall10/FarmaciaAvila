@@ -1,0 +1,6 @@
+# Copia este archivo como application-local.properties (está en .gitignore).
+# Valores solo para desarrollo local. No uses estos valores en producción.
+
+DB_USERNAME=postgres
+DB_PASSWORD=cambiar
+JWT_SECRET=reemplazar-con-clave-base64-de-al-menos-256-bits
