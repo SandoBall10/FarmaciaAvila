@@ -1,6 +1,11 @@
-# Copia este archivo como application-local.properties (está en .gitignore).
+# Copia este archivo como application-local.properties en la raíz de farmaciaSpring
+# (está en .gitignore). También puedes exportar las mismas claves como variables de entorno.
 # Valores solo para desarrollo local. No uses estos valores en producción.
 
+DB_URL=jdbc:postgresql://localhost:5432/farmacia_avila
 DB_USERNAME=postgres
 DB_PASSWORD=cambiar
-JWT_SECRET=reemplazar-con-clave-base64-de-al-menos-256-bits
+JWT_SECRET=REPLACE_WITH_A_RANDOM_256_BIT_SECRET
+JWT_EXPIRATION=3600000
+CORS_ALLOWED_ORIGINS=http://localhost:5173
+SPRING_PROFILES_ACTIVE=local

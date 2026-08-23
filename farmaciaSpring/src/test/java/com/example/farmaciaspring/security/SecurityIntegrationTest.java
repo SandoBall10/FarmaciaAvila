@@ -101,4 +101,49 @@ class SecurityIntegrationTest {
         mockMvc.perform(delete("/api/producto/1"))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    @WithMockUser(roles = "Vendedor")
+    void vendedor_noDeberiaEliminarCliente() throws Exception {
+        mockMvc.perform(delete("/api/cliente/1"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void sinAutenticacion_noDeberiaEliminarCliente() throws Exception {
+        mockMvc.perform(delete("/api/cliente/1"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void admin_autorizadoAEliminarCliente_sinDatosPreviosDevuelve404() throws Exception {
+        mockMvc.perform(delete("/api/cliente/1"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void rutaNoDeclarada_sinJwt_noDebeQuedarPublica() throws Exception {
+        mockMvc.perform(get("/ruta-no-declarada"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void rutaNoDeclarada_autenticado_tampocoDebeQuedarAccesible() throws Exception {
+        mockMvc.perform(get("/ruta-no-declarada"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void sinAutenticacion_noDeberiaAccederAVentas() throws Exception {
+        mockMvc.perform(get("/api/venta"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void sinAutenticacion_noDeberiaAccederAProductos() throws Exception {
+        mockMvc.perform(get("/api/producto"))
+                .andExpect(status().isUnauthorized());
+    }
 }

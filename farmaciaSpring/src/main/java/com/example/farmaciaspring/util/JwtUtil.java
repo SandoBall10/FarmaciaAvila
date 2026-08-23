@@ -16,9 +16,14 @@ import java.util.Map;
 @Component
 public class JwtUtil {
     private final String secretKey;
+    private final long expirationMs;
 
-    public JwtUtil(@Value("${jwt.secret}") String secretKey) {
+    public JwtUtil(
+            @Value("${jwt.secret}") String secretKey,
+            @Value("${jwt.expiration-ms}") long expirationMs
+    ) {
         this.secretKey = secretKey;
+        this.expirationMs = expirationMs;
     }
 
     private Key getSigningKey() {
@@ -33,7 +38,7 @@ public class JwtUtil {
                 .setClaims(claims)
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }

@@ -2,6 +2,7 @@ package com.example.farmaciaspring.mapper;
 
 import com.example.farmaciaspring.dto.ClienteRequestDTO;
 import com.example.farmaciaspring.dto.ClienteResponseDTO;
+import com.example.farmaciaspring.dto.ClienteResumenDTO;
 import com.example.farmaciaspring.model.Cliente;
 
 public final class ClienteMapper {
@@ -30,5 +31,15 @@ public final class ClienteMapper {
         dto.setEmail(cliente.getEmail());
         dto.setTelefono(cliente.getTelefono());
         return dto;
+    }
+
+    public static ClienteResumenDTO toResumen(Cliente cliente) {
+        return new ClienteResumenDTO(
+                cliente.getId(),
+                cliente.getNombre(),
+                cliente.getApellidos(),
+                cliente.getEmail(),
+                cliente.getTelefono()
+        );
     }
 }

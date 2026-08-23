@@ -7,6 +7,7 @@ public class VentaListItemDTO {
     private int idcliente;
     private LocalDate fechaRegistro;
     private double precioTotal;
+    private ClienteResumenDTO cliente;
 
     public int getId() {
         return id;
@@ -38,5 +39,13 @@ public class VentaListItemDTO {
 
     public void setPrecioTotal(double precioTotal) {
         this.precioTotal = precioTotal;
+    }
+
+    public ClienteResumenDTO getCliente() {
+        return cliente;
+    }
+
+    public void setCliente(ClienteResumenDTO cliente) {
+        this.cliente = cliente;
     }
 }

@@ -32,7 +32,12 @@ build/
 ### Secrets locales ###
 .env
 .env.local
-application-local.properties
+.env.*
+!.env.example
+/application-local.properties
+
+# JDBC de MySQL no usado (el proyecto usa PostgreSQL vía Maven)
+mysql-connector-j-*.jar
 
 ### VS Code ###
 .vscode/

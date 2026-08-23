@@ -2,6 +2,8 @@ import axios from 'axios';
 import { clearSession, getToken } from '../auth/authStorage';
 import { notifyUnauthorized } from './sessionEvents';
 
+// VITE_API_URL es la única fuente de la URL del backend.
+// El fallback cubre `npm run dev` sin .env; un build de producción debe definir VITE_API_URL.
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8010';
 
 export const http = axios.create({

@@ -183,4 +183,27 @@ class VentaControllerIntegrationTest {
         mockMvc.perform(delete("/api/ventadetalle/1"))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    @WithMockUser(roles = "Vendedor")
+    void getVentas_deberiaDevolverListadoConResumenDeCliente() throws Exception {
+        Cliente cliente = clientesRepository.save(cliente("Ana"));
+        Producto producto = productoRepository.save(producto("Omeprazol", 8.0, 20));
+        VentaResponseDTO venta = ventaService.registrarVenta(
+                cliente.getId(),
+                LocalDate.now(),
+                List.of(linea(producto.getId(), 2))
+        );
+
+        mockMvc.perform(get("/api/venta"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(venta.getId()))
+                .andExpect(jsonPath("$[0].idcliente").value(cliente.getId()))
+                .andExpect(jsonPath("$[0].precioTotal").value(16.0))
+                .andExpect(jsonPath("$[0].cliente.id").value(cliente.getId()))
+                .andExpect(jsonPath("$[0].cliente.nombre").value("Ana"))
+                .andExpect(jsonPath("$[0].cliente.apellidos").value("Prueba"))
+                .andExpect(jsonPath("$[0].detalles").doesNotExist())
+                .andExpect(jsonPath("$[0].password").doesNotExist());
+    }
 }

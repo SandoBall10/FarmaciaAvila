@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -26,6 +27,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -35,10 +37,16 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtRequestFilter jwtRequestFilter;
+    private final List<String> allowedOrigins;
 
-    public SecurityConfig(CustomUserDetailsService customUserDetailsService, JwtRequestFilter jwtRequestFilter) {
+    public SecurityConfig(
+            CustomUserDetailsService customUserDetailsService,
+            JwtRequestFilter jwtRequestFilter,
+            @Value("${app.cors.allowed-origins}") String allowedOrigins
+    ) {
         this.customUserDetailsService = customUserDetailsService;
         this.jwtRequestFilter = jwtRequestFilter;
+        this.allowedOrigins = parseOrigins(allowedOrigins);
     }
 
     @Bean
@@ -66,8 +74,9 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/authenticate").permitAll()
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/**").authenticated()
-                        .anyRequest().permitAll())
+                        .anyRequest().denyAll())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex
@@ -90,7 +99,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
@@ -98,6 +107,20 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    private List<String> parseOrigins(String raw) {
+        List<String> origins = Arrays.stream(raw.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .toList();
+        if (origins.isEmpty()) {
+            throw new IllegalStateException("app.cors.allowed-origins no puede estar vacío");
+        }
+        if (origins.stream().anyMatch("*"::equals)) {
+            throw new IllegalStateException("CORS no permite '*' con autenticación JWT");
+        }
+        return origins;
     }
 
     private void writeError(HttpServletResponse response, ObjectMapper mapper, int status, String message, String path)

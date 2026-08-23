@@ -1,8 +1,10 @@
 package com.example.farmaciaspring.controller;
 
 import com.example.farmaciaspring.model.Role;
+import com.example.farmaciaspring.model.User;
 import com.example.farmaciaspring.repository.RoleRepository;
 import com.example.farmaciaspring.repository.UserRepository;
+import com.example.farmaciaspring.util.JwtUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,6 +25,7 @@ import java.util.Set;
 import static com.example.farmaciaspring.support.TestDataFactory.rol;
 import static com.example.farmaciaspring.support.TestDataFactory.usuario;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -42,6 +45,8 @@ class AuthenticationControllerIntegrationTest {
     private RoleRepository roleRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @BeforeEach
     void setUp() {
@@ -115,6 +120,21 @@ class AuthenticationControllerIntegrationTest {
                         .param("username", "admin")
                         .param("password", "admin123"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void jwtDeUsuarioEliminado_deberiaDevolver401() throws Exception {
+        Role admin = roleRepository.findAll().get(0);
+        User temporal = userRepository.save(usuario("temporal", "admin123", admin, passwordEncoder));
+        String token = jwtUtil.generateToken(temporal.getUsername(), "ROLE_ADMIN");
+        userRepository.delete(temporal);
+        userRepository.flush();
+
+        mockMvc.perform(get("/api/users")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.trace").doesNotExist());
     }
 
     private Set<String> names(JsonNode node) {

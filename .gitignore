@@ -1,0 +1,22 @@
+# Secretos locales. Versionar este archivo ANTES de añadir el resto del proyecto.
+.env
+.env.local
+.env.*
+!.env.example
+!.env.docker.example
+
+# Secretos del perfil local (archivo en la raíz de farmaciaSpring, no el de src/main/resources).
+farmaciaSpring/application-local.properties
+
+# Frontend
+node_modules/
+dist/
+dist-ssr/
+
+# Backend
+farmaciaSpring/target/
+
+# OS / IDE
+.DS_Store
+.idea/
+*.iml

@@ -11,9 +11,11 @@ import { getApiError } from '../../utils/apiError';
 import { dataTableEs } from '../../utils/inventory';
 import { Cliente } from '../../types/cliente';
 import { clienteService } from '../../services/clienteService';
+import { getCurrentUser } from '../../auth/authStorage';
 import 'datatables.net-responsive';
 
 const ClienteList: React.FC = () => {
+  const isAdmin = getCurrentUser()?.role === 'ADMIN';
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -102,7 +104,9 @@ const ClienteList: React.FC = () => {
                   <td>{cliente.telefono}</td>
                   <td>
                     <button type="button" className="btn btn-outline-secondary btn-sm me-1" onClick={() => { setClienteSeleccionado(cliente); setShowModal(true); }}>Editar</button>
-                    <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => setIdEliminar(cliente.id)}>Eliminar</button>
+                    {isAdmin && (
+                      <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => setIdEliminar(cliente.id)}>Eliminar</button>
+                    )}
                   </td>
                 </tr>
               ))}

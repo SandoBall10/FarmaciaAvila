@@ -1,12 +1,12 @@
 package com.example.farmaciaspring.service;
 
-import com.example.farmaciaspring.dto.ClienteResumenDTO;
 import com.example.farmaciaspring.dto.ProductoResumenDTO;
 import com.example.farmaciaspring.dto.VentaDetalleResponseDTO;
 import com.example.farmaciaspring.dto.VentaLineaRequestDTO;
 import com.example.farmaciaspring.dto.VentaListItemDTO;
 import com.example.farmaciaspring.dto.VentaRequestDTO;
 import com.example.farmaciaspring.dto.VentaResponseDTO;
+import com.example.farmaciaspring.mapper.ClienteMapper;
 import com.example.farmaciaspring.mapper.VentaMapper;
 import com.example.farmaciaspring.exception.BusinessException;
 import com.example.farmaciaspring.exception.InsufficientStockException;
@@ -26,6 +26,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class VentaService {
@@ -46,8 +50,14 @@ public class VentaService {
     }
 
     public List<VentaListItemDTO> getAllVentas() {
-        return ventaRepository.findAll().stream()
-                .map(VentaMapper::toListItem)
+        List<Venta> ventas = ventaRepository.findAll();
+        Set<Integer> clienteIds = ventas.stream()
+                .map(Venta::getIdcliente)
+                .collect(Collectors.toSet());
+        Map<Integer, Cliente> clientes = clientesRepository.findAllById(clienteIds).stream()
+                .collect(Collectors.toMap(Cliente::getId, Function.identity()));
+        return ventas.stream()
+                .map(venta -> VentaMapper.toListItem(venta, clientes.get(venta.getIdcliente())))
                 .toList();
     }
 
@@ -126,7 +136,7 @@ public class VentaService {
         dto.setPrecioTotal(venta.getPrecioTotal());
 
         clientesRepository.findById(venta.getIdcliente()).ifPresent(cliente ->
-                dto.setCliente(toClienteResumen(cliente)));
+                dto.setCliente(ClienteMapper.toResumen(cliente)));
 
         List<VentaDetalleResponseDTO> detalles = new ArrayList<>();
         for (VentaDetalle detalle : ventaDetalleRepository.findByIdventa(venta.getId())) {
@@ -134,16 +144,6 @@ public class VentaService {
         }
         dto.setDetalles(detalles);
         return dto;
-    }
-
-    private ClienteResumenDTO toClienteResumen(Cliente cliente) {
-        return new ClienteResumenDTO(
-                cliente.getId(),
-                cliente.getNombre(),
-                cliente.getApellidos(),
-                cliente.getEmail(),
-                cliente.getTelefono()
-        );
     }
 
     private VentaDetalleResponseDTO toDetalleResponse(VentaDetalle detalle) {

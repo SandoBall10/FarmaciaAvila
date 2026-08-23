@@ -108,18 +108,15 @@ const Principal: React.FC<PrincipalProps> = ({ user }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {recientes.map((venta) => {
-                      const cliente = clientes.find((c) => c.id === venta.idcliente);
-                      return (
+                    {recientes.map((venta) => (
                         <tr key={venta.id}>
                           <td>#{venta.id}</td>
-                          <td>{cliente ? `${cliente.nombre} ${cliente.apellidos}` : 'Cliente'}</td>
+                          <td>{venta.cliente ? `${venta.cliente.nombre} ${venta.cliente.apellidos}` : 'Cliente'}</td>
                           <td>{venta.fechaRegistro}</td>
                           <td>S/ {venta.precioTotal.toFixed(2)}</td>
                           <td><StatusBadge label="Registrada" tone="ok" /></td>
                         </tr>
-                      );
-                    })}
+                    ))}
                   </tbody>
                 </table>
               </div>

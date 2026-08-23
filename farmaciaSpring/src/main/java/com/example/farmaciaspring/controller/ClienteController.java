@@ -6,6 +6,7 @@ import com.example.farmaciaspring.service.ClienteService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -41,6 +42,7 @@ public class ClienteController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteCliente(@PathVariable int id) {
         clienteService.deleteCliente(id);
         return ResponseEntity.noContent().build();

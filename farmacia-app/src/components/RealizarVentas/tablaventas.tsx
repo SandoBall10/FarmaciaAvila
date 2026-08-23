@@ -10,14 +10,11 @@ import LoadingState from '../ui/LoadingState';
 import StatusBadge from '../ui/StatusBadge';
 import { dataTableEs } from '../../utils/inventory';
 import { getApiError } from '../../utils/apiError';
-import { Cliente } from '../../types/cliente';
 import { Venta } from '../../types/venta';
-import { clienteService } from '../../services/clienteService';
 import { ventaService } from '../../services/ventaService';
 
 const TablaVentas: React.FC = () => {
   const [ventas, setVentas] = useState<Venta[]>([]);
-  const [clientes, setClientes] = useState<Cliente[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [ventaSeleccionada, setVentaSeleccionada] = useState<Venta | null>(null);
   const [showDetalleModal, setShowDetalleModal] = useState(false);
@@ -40,11 +37,7 @@ const TablaVentas: React.FC = () => {
   const cargarDatos = async () => {
     try {
       setLoading(true);
-      const [clientesResponse, ventasResponse] = await Promise.all([
-        clienteService.getAll(),
-        ventaService.getAll()
-      ]);
-      setClientes(clientesResponse);
+      const ventasResponse = await ventaService.getAll();
       setVentas(ventasResponse);
     } catch (error) {
       setError(getApiError(error, 'Error al cargar los datos'));
@@ -126,11 +119,13 @@ const TablaVentas: React.FC = () => {
             </thead>
             <tbody>
               {ventas.map((venta) => {
-                const cliente = clientes.find(c => c.id === venta.idcliente);
+                const nombreCliente = venta.cliente
+                  ? `${venta.cliente.nombre} ${venta.cliente.apellidos}`
+                  : 'Desconocido';
                 return (
                   <tr key={venta.id}>
                     <td>{venta.id}</td>
-                    <td>{cliente ? `${cliente.nombre} ${cliente.apellidos}` : 'Desconocido'}</td>
+                    <td>{nombreCliente}</td>
                     <td>{formatInTimeZone(new Date(venta.fechaRegistro), timeZone, 'dd/MM/yyyy HH:mm:ss')}</td>
                     <td>S/ {venta.precioTotal.toFixed(2)}</td>
                     <td><StatusBadge label="Registrada" tone="ok" /></td>

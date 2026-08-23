@@ -1,0 +1,91 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: farmacia-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - farmacia_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - farmacia
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./farmaciaSpring
+      dockerfile: Dockerfile
+    container_name: farmacia-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      DB_USERNAME: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+    ports:
+      - "8010:8010"
+    networks:
+      - farmacia
+    restart: unless-stopped
+
+  seed:
+    image: postgres:16-alpine
+    container_name: farmacia-seed
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./docker/seed-demo.sql:/seed.sql:ro
+    command:
+      - sh
+      - -c
+      - |
+        until pg_isready -h postgres -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"; do sleep 2; done
+        until psql -h postgres -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -c "SELECT 1 FROM users LIMIT 1" >/dev/null 2>&1; do sleep 2; done
+        psql -h postgres -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -f /seed.sql
+    networks:
+      - farmacia
+    restart: "no"
+
+  frontend:
+    build:
+      context: ./farmacia-app
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+    container_name: farmacia-frontend
+    depends_on:
+      backend:
+        condition: service_started
+      seed:
+        condition: service_completed_successfully
+    ports:
+      - "8080:8080"
+    networks:
+      - farmacia
+    restart: unless-stopped
+
+volumes:
+  farmacia_pgdata:
+
+networks:
+  farmacia:
+    driver: bridge
