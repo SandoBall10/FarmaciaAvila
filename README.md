@@ -278,16 +278,6 @@ npm run dev
 
 Configura `VITE_API_URL` (`farmacia-app/.env.example`). CORS por defecto en local: `http://localhost:5173`.
 
----
-
-## 📸 Capturas de pantalla
-
-Aún no están en el repositorio. Rutas previstas:
-
-`docs/screenshots/login.png` · `dashboard.png` · `productos.png` · `clientes.png` · `ventas.png` · `usuarios.png`
-
----
-
 ## 🔑 Credenciales demo
 
 Exclusivas del **Docker local** después del seed. **No usarlas en producción.**
